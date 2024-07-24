@@ -1,22 +1,33 @@
 import './App.css';
+import { BrowserRouter, Navigate, Route, Routes,redirect} from "react-router-dom"
+import Navbar from './components/navbar/Navbar';
+import Login from './pages/auth/Login';
+import Home from './pages/home/Home';
+import React, { useEffect, useState } from 'react';
+import ProfileData from './pages/profile/profileData';
+import auth from "./firebase/config"
+import { getAuth,onAuthStateChanged } from "firebase/auth";
 
 function App() {
+  const [user, setUser] = useState(null);
+  const auth = getAuth();
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+  }, []);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <BrowserRouter>
+      <Navbar/>
+      <Routes>
+        <Route path="/" element={<Home/>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/profile/edit" element={user ? <ProfileData isEditMode /> : <Navigate to="/" />} />
+        <Route path="/profile/create" element={user ? <ProfileData isEditMode={false} /> : <Navigate to="/" />} />
+      </Routes>
+      </BrowserRouter>
     </div>
   );
 }
