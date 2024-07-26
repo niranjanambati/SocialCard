@@ -25,7 +25,7 @@ function App() {
         <Route path="/" element={<Home/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/profile/edit" element={user ? <ProfileData isEditMode /> : <Navigate to="/" />} />
-        <Route path="/profile/create" element={user ? <ProfileData isEditMode={false} /> : <Navigate to="/" />} />
+        <Route path="/profile/create" element={<ProfileData isEditMode={false} />} />
       </Routes>
       </BrowserRouter>
     </div>
