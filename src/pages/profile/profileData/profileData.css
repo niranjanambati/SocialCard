@@ -1,0 +1,175 @@
+.profile-container {
+  width: 80%;
+  margin: auto;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile-info h1,
+.profile-info h2,
+.profile-info p {
+  margin: 5px;
+}
+
+.contact-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.contact-btn {
+  padding: 10px 20px;
+  background-color: #ff7f50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.gray-link {
+  color: gray;
+  text-decoration: underline;
+}
+
+.profile-section {
+  margin-bottom: 20px;
+}
+
+.profile-section h3 {
+  text-align: center;
+}
+
+.icon-row {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.icon-item {
+  text-align: center;
+  margin: 10px;
+}
+
+.icon {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.icon-gray {
+  color: gray;
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+}
+
+.icon-colored {
+  color: blue;
+}
+
+.popup-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.popup-card h3 {
+  margin-bottom: 20px;
+}
+
+.popup-card input {
+  padding: 10px;
+  width: 80%;
+  margin-bottom: 20px;
+}
+
+.popup-card button {
+  margin: 5px;
+  padding: 10px 20px;
+  background-color: #ff7f50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.share-url {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.share-url input {
+  padding: 10px;
+  width: 80%;
+  margin-top: 10px;
+}
+
+.whatsapp {
+  color: green;
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+}
+
+.instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: white;
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+}
+
+.facebook {
+  background-color: #3b5998;
+  color: white;
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.linkedin {
+  color: #0077b5;
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+}
+
+.twitter {
+  color: #1DA1F2;
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+}
+
+.phone {
+  color: #37C6D0;
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+}
+
+.google-maps-gradient {
+  color: linear-gradient(45deg, #4285F4, #34A853, #FBBC05, #EA4335);
+  -webkit-text-fill-color: transparent;
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+}
+
+.mail {
+  color: #D44638; /* Gmail red color */
+  width: 70px;
+  height: 70px;
+  border-radius: 32%;
+}

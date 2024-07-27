@@ -36,7 +36,7 @@ const Login = () => {
 
         <button
           onClick={signInWithGoogle}
-          className="mt-4 bg-white text-black rounded-full w-fit px-4 py-2 flex items-center"
+          className="mt-4 bg-white text-black rounded-full w-fit px-4 py-2 flex items-center z-10"
         >
           <svg className="inline h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
             <path fill="#4285F4" d="M24 9.5c3.27 0 6.21 1.17 8.53 3.1l6.36-6.36C34.34 2.79 29.49 1 24 1 14.65 1 6.7 6.88 3.42 15.44l7.44 5.78C12.7 15.49 17.92 9.5 24 9.5z"></path>
