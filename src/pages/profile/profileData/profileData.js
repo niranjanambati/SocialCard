@@ -95,8 +95,6 @@ const ProfileData = ({ isEditMode }) => {
       <div className="profile-header">
         <div className="profile-info">
           <h1>{profile.name}</h1>
-          <h2>Senior Software Engineer</h2>
-          <p>EY</p>
         </div>
       </div>
       <div className="contact-actions">

@@ -100,15 +100,19 @@
 }
 
 .share-url {
-  display: flex;
-  justify-content: center;
+  text-align: center;
   margin-top: 20px;
 }
 
+.share-url p {
+  margin-bottom: 10px;
+}
+
 .share-url input {
-  padding: 10px;
-  width: 80%;
-  margin-top: 10px;
+  width: 100%;
+  text-align: center;
+  padding: 5px;
+  box-sizing: border-box;
 }
 
 .whatsapp {
