@@ -164,7 +164,7 @@
 }
 
 .google-maps-gradient {
-  color: linear-gradient(45deg, #4285F4, #34A853, #FBBC05, #EA4335);
+  color: #FE7569;
   -webkit-text-fill-color: transparent;
   width: 70px;
   height: 70px;
@@ -176,4 +176,8 @@
   width: 70px;
   height: 70px;
   border-radius: 32%;
+}
+.resume{
+  color: rgb(35, 35, 159);
+  text-decoration: underline;
 }

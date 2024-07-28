@@ -19,15 +19,13 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/profile/:userId" element={<ProfileData isEditMode={false} />} />
+        <Route path="/:userId" element={<ProfileData isEditMode={false} />} />
         <Route
-          path="/profile"
+          path="/"
           element={user ? <ProfileData isEditMode={true} /> : <Navigate to="/login" />}
         />
-        <Route path="/" element={user ? <Navigate to="/profile" /> : <Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
   );
