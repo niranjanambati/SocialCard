@@ -19,7 +19,6 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/profile/:userId" element={<ProfileData isEditMode={false} />} />

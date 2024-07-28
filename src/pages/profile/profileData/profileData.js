@@ -6,6 +6,7 @@ import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { faTwitter, faLinkedin, faFacebook, faInstagram, faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import './profileData.css'
+import Navbar from '../../../components/navbar/Navbar';
 
 const ProfileData = ({ isEditMode }) => {
   const db = getFirestore();
@@ -79,18 +80,30 @@ const ProfileData = ({ isEditMode }) => {
   };
 
   const handleIconClick = (field) => {
-    if (isEditMode) {
-      setPopupField(field);
-      setShowPopup(true);
-    } else {
-      const url = profile[field];
-      if (url) {
+    const url = profile[field];
+    if (!isEditMode) {
+      if (field === 'mail' && url) {
+        window.location.href = `mailto:${url}`;
+      } else if (field === 'contact' && url) {
+        navigator.clipboard.writeText(url);
+        alert('Phone number copied to clipboard!');
+      } else if (field === 'address' && url) {
+        navigator.clipboard.writeText(url);
+        alert('Address copied to clipboard!');
+      } else if (field === 'whatsapp' && url) {
+        window.open(`https://wa.me/${url}`, '_blank');
+      } else if (url) {
         window.open(url, '_blank');
       }
+    } else {
+      setPopupField(field);
+      setShowPopup(true);
     }
   };
 
   return (
+    <>
+    {isEditMode && <Navbar/>}
     <div className="profile-container">
       <div className="profile-header">
         <div className="profile-info">
@@ -98,11 +111,11 @@ const ProfileData = ({ isEditMode }) => {
         </div>
       </div>
       <div className="contact-actions">
-        <button className={`contact-btn ${profile.resume ? '' : 'gray-link'}`} onClick={() => handleIconClick('resume')}>Resume</button>
+        <a className={profile.resume ? 'resume' : 'gray-link'} onClick={() => handleIconClick('resume')}>Resume</a>
       </div>
       <div className="profile-section">
         <h3>Bio :</h3>
-        <p>{profile.bio}</p>
+        <p >{profile.bio}</p>
       </div>
       <div className="profile-section">
         <h3>Contact Details</h3>
@@ -171,6 +184,7 @@ const ProfileData = ({ isEditMode }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
