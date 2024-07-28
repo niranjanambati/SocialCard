@@ -149,10 +149,10 @@ const ProfileData = ({ isEditMode }) => {
             <FontAwesomeIcon icon={faLinkedin} className={`icon ${profile.linkedin ? 'linkedin' : 'icon-gray'}`} onClick={() => handleIconClick('linkedin')} />
             
           </div>
-          <div className="icon-item">
+          {(isEditMode || profile.facebook)&&<div className="icon-item">
             <FontAwesomeIcon icon={faFacebook} className={`icon ${profile.facebook ? 'facebook' : 'icon-gray'}`} onClick={() => handleIconClick('facebook')} />
-            
-          </div>
+  
+          </div>}
           <div className="icon-item">
             <FontAwesomeIcon icon={faInstagram} className={`icon ${profile.instagram ? 'instagram' : 'icon-gray'}`} onClick={() => handleIconClick('instagram')} />
             
@@ -179,7 +179,7 @@ const ProfileData = ({ isEditMode }) => {
           <p>You can share this URL:</p>
           </div>
           <div>
-          <input type="text" value={`${window.location.origin}/profile/${user.uid}`} readOnly />
+          <input type="text" value={`${window.location.origin}/${user.uid}`} readOnly />
           </div>
         </div>
       )}
