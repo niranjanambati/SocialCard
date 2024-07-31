@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import ProfileData from './pages/profile/profileData/profileData.js';
 import Login from './pages/auth/Login';
-import Navbar from './components/navbar/Navbar';
+import { ChakraProvider } from '@chakra-ui/react'
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -18,6 +18,7 @@ const App = () => {
   }, []);
 
   return (
+    <ChakraProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -28,6 +29,7 @@ const App = () => {
         />
       </Routes>
     </BrowserRouter>
+    </ChakraProvider>
   );
 };
 
