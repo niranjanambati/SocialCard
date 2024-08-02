@@ -28,7 +28,7 @@ const SelectUsername = () => {
       } else {
         setError('');
       }
-    }, 10000),
+    }, 2000),
     [db]
   );
 
