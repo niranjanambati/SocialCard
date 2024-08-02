@@ -137,9 +137,11 @@ const ProfileData = ({ isEditMode }) => {
         window.open(`https://maps.google.com/?q=${encodeURIComponent(url)}`, '_blank');
       } else if (field === 'whatsapp') {
         window.open(`https://wa.me/${url}`, '_blank');
-      } else {
+      }
+      else {
         window.open(url, '_blank');
       }
+
     } else if (isEditMode) {
       setPopupField(field);
       onOpen();
@@ -173,8 +175,8 @@ const ProfileData = ({ isEditMode }) => {
           )}
           <Text fontSize="3xl" fontWeight="bold" color="white">{profile.name}</Text>
           <Text color="gray.400" mb={4}>{profile.bio}</Text>
-          {profile.resume && (
-            <Button colorScheme="orange" onClick={() => window.open(profile.resume, '_blank')}>
+          {(isEditMode || profile.resume) && (
+            <Button colorScheme="orange" onClick={() => handleIconClick('resume')} >
               Download Resume
             </Button>
           )}
@@ -184,20 +186,20 @@ const ProfileData = ({ isEditMode }) => {
           <Box>
             <Text fontSize="xl" fontWeight="bold" mb={2}>Contact Details</Text>
             <SimpleGrid columns={[2, null, 4]} spacing={4}>
-              <IconButton icon={<PhoneIcon />} label="Phone" field="contact" onClick={() => handleIconClick('contact')} isActive={!!profile.contact} />
-              <IconButton icon={<EmailIcon />} label="Email" field="mail" onClick={() => handleIconClick('mail')} isActive={!!profile.mail} />
-              <IconButton icon={<LinkIcon />} label="Address" field="address" onClick={() => handleIconClick('address')} isActive={!!profile.address} />
-              <IconButton icon={<FaWhatsapp />} label="WhatsApp" field="whatsapp" onClick={() => handleIconClick('whatsapp')} isActive={!!profile.whatsapp} />
+              {(isEditMode||profile.contact) && <IconButton icon={<PhoneIcon />} label="Phone" field="contact" onClick={() => handleIconClick('contact')} isActive={!!profile.contact} />}
+              {(isEditMode||profile.mail) && <IconButton icon={<EmailIcon />} label="Email" field="mail" onClick={() => handleIconClick('mail')} isActive={!!profile.mail} />}
+              {(isEditMode||profile.address) && <IconButton icon={<LinkIcon />} label="Address" field="address" onClick={() => handleIconClick('address')} isActive={!!profile.address} />}
+              {(isEditMode||profile.whatsapp) && <IconButton icon={<FaWhatsapp />} label="WhatsApp" field="whatsapp" onClick={() => handleIconClick('whatsapp')} isActive={!!profile.whatsapp} />}
             </SimpleGrid>
           </Box>
 
           <Box>
             <Text fontSize="xl" fontWeight="bold" mb={2}>Social Media</Text>
             <SimpleGrid columns={[2, null, 4]} spacing={4}>
-              <IconButton icon={<FaTwitter />} label="Twitter" field="twitter" onClick={() => handleIconClick('twitter')} isActive={!!profile.twitter} />
-              <IconButton icon={<FaLinkedin />} label="LinkedIn" field="linkedin" onClick={() => handleIconClick('linkedin')} isActive={!!profile.linkedin} />
-              <IconButton icon={<FaFacebook />} label="Facebook" field="facebook" onClick={() => handleIconClick('facebook')} isActive={!!profile.facebook} />
-              <IconButton icon={<FaInstagram />} label="Instagram" field="instagram" onClick={() => handleIconClick('instagram')} isActive={!!profile.instagram} />
+            {(isEditMode||profile.twitter) && <IconButton icon={<FaTwitter />} label="Twitter" field="twitter" onClick={() => handleIconClick('twitter')} isActive={!!profile.twitter} />}
+            {(isEditMode||profile.linkedin) && <IconButton icon={<FaLinkedin />} label="LinkedIn" field="linkedin" onClick={() => handleIconClick('linkedin')} isActive={!!profile.linkedin} />}
+            {(isEditMode||profile.facebook) && <IconButton icon={<FaFacebook />} label="Facebook" field="facebook" onClick={() => handleIconClick('facebook')} isActive={!!profile.facebook} />}
+            {(isEditMode||profile.instagram) && <IconButton icon={<FaInstagram />} label="Instagram" field="instagram" onClick={() => handleIconClick('instagram')} isActive={!!profile.instagram} />}
             </SimpleGrid>
           </Box>
         </VStack>

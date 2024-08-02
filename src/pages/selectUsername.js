@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getFirestore, collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebase/config';
+import { useSelector, useDispatch } from 'react-redux';
+import { setHasUsername, selectUser } from '../redux/userSlice';
 import { Box, Input, Text, Button, VStack, useToast } from '@chakra-ui/react';
+import debounce from 'lodash/debounce';
 
 const SelectUsername = () => {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
-  const [user] = useAuthState(auth);
+  const user = useSelector(selectUser);
   const navigate = useNavigate();
   const db = getFirestore();
   const toast = useToast();
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const checkUsername = async () => {
+  const debouncedCheckUsername = useCallback(
+    debounce(async (username) => {
       if (username) {
         const docRef = doc(collection(db, 'usernames'), username);
         const docSnap = await getDoc(docRef);
@@ -26,14 +28,13 @@ const SelectUsername = () => {
       } else {
         setError('');
       }
-    };
+    }, 10000),
+    [db]
+  );
 
-    const timeoutId = setTimeout(() => {
-      checkUsername();
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [username, db]);
+  useEffect(() => {
+    debouncedCheckUsername(username);
+  }, [username, debouncedCheckUsername]);
 
   const handleUsernameChange = (e) => {
     setUsername(e.target.value);
@@ -53,8 +54,8 @@ const SelectUsername = () => {
           duration: 3000,
           isClosable: true,
         });
-        console.log("Navigating home");
-        navigate(`/`);
+        dispatch(setHasUsername(true));
+        navigate('/');
       }
     }
   };

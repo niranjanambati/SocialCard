@@ -1,50 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect,useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { useDispatch, useSelector } from 'react-redux';
 import ProfileData from './pages/profile/profileData/profileData';
 import Login from './pages/auth/Login';
 import SelectUsername from './pages/selectUsername';
-import { ChakraProvider } from '@chakra-ui/react';
-import { Spinner } from '@chakra-ui/react';
+import { ChakraProvider, Spinner } from '@chakra-ui/react';
 import { auth, db } from './firebase/config';
+import { setUser, setHasUsername, selectUser, selectHasUsername } from './redux/userSlice';
 
 const App = () => {
-  const [user, setUser] = useState(null);
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  const hasUsername = useSelector(selectHasUsername);
   const [loading, setLoading] = useState(true);
-  const [hasUsername, setHasUsername] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
       if (user) {
-        console.log("User is logged in: ", user);
+        dispatch(setUser(user));
         const userDoc = await getDoc(doc(db, 'profiles', user.uid));
-        if (userDoc.exists()) {
-          const username = userDoc.data().username;
-          console.log("Username found: ", username);
-          setHasUsername(username);
-        } else {
-          console.log("No username found");
-          setHasUsername(false);
-        }
+        dispatch(setHasUsername(userDoc.exists() && userDoc.data().username));
       } else {
-        console.log("No user is logged in");
-        setHasUsername(false);
+        dispatch(setUser(null));
+        dispatch(setHasUsername(false));
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
-
+  }, [dispatch]);
 
   if (loading) {
     return (
       <ChakraProvider>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-          <Spinner size="xl" />
-        </div>
+        <Spinner />
       </ChakraProvider>
     );
   }
