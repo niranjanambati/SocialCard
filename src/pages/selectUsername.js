@@ -18,12 +18,16 @@ const SelectUsername = () => {
   const debouncedCheckUsername = useCallback(
     debounce(async (username) => {
       if (username) {
-        const docRef = doc(collection(db, 'usernames'), username);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setError('Username already taken');
+        if (username.includes(' ')) {
+          setError('Invalid username (username should not contain space)');
         } else {
-          setError('Username available');
+          const docRef = doc(collection(db, 'usernames'), username);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setError('Username already taken');
+          } else {
+            setError('Username available');
+          }
         }
       } else {
         setError('');
@@ -41,22 +45,20 @@ const SelectUsername = () => {
   };
 
   const handleSave = async () => {
-    if (user) {
-      if (error === 'Username available') {
-        const userRef = doc(collection(db, 'profiles'), user.uid);
-        await setDoc(userRef, { username }, { merge: true });
-        const usernameRef = doc(collection(db, 'usernames'), username);
-        await setDoc(usernameRef, { uid: user.uid });
-        toast({
-          title: "Username saved",
-          description: "Your username has been successfully set.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        dispatch(setHasUsername(true));
-        navigate('/');
-      }
+    if (user && error === 'Username available') {
+      const userRef = doc(collection(db, 'profiles'), user.uid);
+      await setDoc(userRef, { username }, { merge: true });
+      const usernameRef = doc(collection(db, 'usernames'), username);
+      await setDoc(usernameRef, { uid: user.uid });
+      toast({
+        title: "Username saved",
+        description: "Your username has been successfully set.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      dispatch(setHasUsername(true));
+      navigate('/');
     }
   };
 
@@ -71,11 +73,11 @@ const SelectUsername = () => {
           bg="white"
           color="black"
         />
-        <Text color={error.includes('taken') ? 'red.500' : 'green.500'}>{error}</Text>
+        <Text color={error.includes('taken') || error.includes('Invalid') ? 'red.500' : 'green.500'}>{error}</Text>
         <Button
           onClick={handleSave}
-          colorScheme={error.includes('taken') ? 'gray' : 'green'}
-          isDisabled={error.includes('taken')}
+          colorScheme={error === 'Username available' ? 'green' : 'gray'}
+          isDisabled={error !== 'Username available'}
         >
           Save Username
         </Button>

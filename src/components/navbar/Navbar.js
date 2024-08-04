@@ -5,6 +5,7 @@ import { auth } from '../../firebase/config';
 import { Link as RouterLink } from 'react-router-dom';
 import { Flex, Box, Text, Button, Link } from "@chakra-ui/react";
 
+
 const Navbar = () => {
   const [user] = useAuthState(auth);
 

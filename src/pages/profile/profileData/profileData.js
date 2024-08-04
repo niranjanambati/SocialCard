@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, doc, getDoc,setDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, query, where, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -10,8 +10,12 @@ import { PhoneIcon, EmailIcon, LinkIcon } from "@chakra-ui/icons";
 import { FaTwitter, FaLinkedin, FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import Navbar from '../../../components/navbar/Navbar';
 import { db, storage, auth } from '../../../firebase/config';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import VCard  from 'vcard-creator';
+import { saveAs } from 'file-saver';
 
 const ProfileData = ({ isEditMode }) => {
+  const [u] = useAuthState(auth);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { username: paramUsername } = useParams();
   const navigate = useNavigate();
@@ -51,7 +55,7 @@ const ProfileData = ({ isEditMode }) => {
 
       if (profileData) {
         setProfile({
-          name: profileData.name || '',
+          name: profileData.name || user?.displayName || '',
           bio: profileData.bio || '',
           mail: profileData.mail || '',
           contact: profileData.contact || '',
@@ -65,9 +69,13 @@ const ProfileData = ({ isEditMode }) => {
           avatarUrl: profileData.avatarUrl || '',
           username: profileData.username || '',
         });
-        console.log('Fetched Data:', profileData.mail); 
       } else if (!isEditMode) {
         navigate('/404');
+      } else if (user) {
+        setProfile(prevProfile => ({
+          ...prevProfile,
+          name: user.displayName || '',
+        }));
       }
     };
 
@@ -82,7 +90,12 @@ const ProfileData = ({ isEditMode }) => {
 
   const handleSave = async () => {
     if (user) {
-      await setDoc(doc(db, 'profiles', user.uid), profile);
+      const updatedProfile = {
+        ...profile,
+        name: profile.name || user.displayName || '',
+      };
+      await setDoc(doc(db, 'profiles', user.uid), updatedProfile);
+      setProfile(updatedProfile); 
       onClose();
       toast({
         title: "Profile updated",
@@ -127,25 +140,42 @@ const ProfileData = ({ isEditMode }) => {
   };
 
   const handleIconClick = (field) => {
-    const url = profile[field];
-    if (!isEditMode && url) {
+    if (field === 'resume' && profile.resume) {
+      window.open(profile.resume, '_blank');
+    } else if (!isEditMode && profile[field]) {
       if (field === 'mail') {
-        window.location.href = `mailto:${url}`;
+        window.location.href = `mailto:${profile[field]}`;
       } else if (field === 'contact') {
-        window.location.href = `tel:${url}`;
+        window.location.href = `tel:${profile[field]}`;
       } else if (field === 'address') {
-        window.open(`https://maps.google.com/?q=${encodeURIComponent(url)}`, '_blank');
+        window.open(`https://maps.google.com/?q=${encodeURIComponent(profile[field])}`, '_blank');
       } else if (field === 'whatsapp') {
-        window.open(`https://wa.me/${url}`, '_blank');
+        window.open(`https://wa.me/${profile[field]}`, '_blank');
+      } else {
+        window.open(profile[field], '_blank');
       }
-      else {
-        window.open(url, '_blank');
-      }
-
     } else if (isEditMode) {
       setPopupField(field);
       onOpen();
     }
+  };
+
+  const handleDownloadVCard = () => {
+    const vCard = new VCard();
+    
+    vCard
+      .addName(profile.name)
+      .addEmail(profile.mail)
+      .addPhoneNumber(profile.contact)
+      .addAddress('', '', profile.address) 
+      .addURL(profile.linkedin, 'LinkedIn')
+      .addURL(profile.twitter, 'Twitter')
+      .addURL(profile.facebook, 'Facebook')
+      .addURL(profile.instagram, 'Instagram');
+  
+    const vCardData = vCard.toString();
+    const blob = new Blob([vCardData], { type: 'text/vcard;charset=utf-8' });
+    saveAs(blob, `${profile.name}.vcf`);
   };
 
   if (loading) {
@@ -173,13 +203,26 @@ const ProfileData = ({ isEditMode }) => {
               display="none"
             />
           )}
-          <Text fontSize="3xl" fontWeight="bold" color="white">{profile.name}</Text>
+          <Text 
+            fontSize="3xl" 
+            fontWeight="bold" 
+            color="white"
+            onClick={() => isEditMode && handleIconClick('name')}
+            cursor={isEditMode ? 'pointer' : 'default'}
+          >
+            {profile.name || 'Add Name'}
+          </Text>
           <Text color="gray.400" mb={4}>{profile.bio}</Text>
-          {(isEditMode || profile.resume) && (
-            <Button colorScheme="orange" onClick={() => handleIconClick('resume')} >
-              Download Resume
+          <Flex>
+            {(isEditMode || profile.resume) && (
+              <Button colorScheme= {profile.resume ? "orange":"gray.400"} onClick={() => handleIconClick('resume')} mr={2}>
+                Resume
+              </Button>
+            )}
+            <Button colorScheme="teal" onClick={handleDownloadVCard}>
+              Download Contact
             </Button>
-          )}
+          </Flex>
         </Flex>
 
         <VStack spacing={6} align="stretch" mt={6}>
@@ -196,10 +239,10 @@ const ProfileData = ({ isEditMode }) => {
           <Box>
             <Text fontSize="xl" fontWeight="bold" mb={2}>Social Media</Text>
             <SimpleGrid columns={[2, null, 4]} spacing={4}>
-            {(isEditMode||profile.twitter) && <IconButton icon={<FaTwitter />} label="Twitter" field="twitter" onClick={() => handleIconClick('twitter')} isActive={!!profile.twitter} />}
-            {(isEditMode||profile.linkedin) && <IconButton icon={<FaLinkedin />} label="LinkedIn" field="linkedin" onClick={() => handleIconClick('linkedin')} isActive={!!profile.linkedin} />}
-            {(isEditMode||profile.facebook) && <IconButton icon={<FaFacebook />} label="Facebook" field="facebook" onClick={() => handleIconClick('facebook')} isActive={!!profile.facebook} />}
-            {(isEditMode||profile.instagram) && <IconButton icon={<FaInstagram />} label="Instagram" field="instagram" onClick={() => handleIconClick('instagram')} isActive={!!profile.instagram} />}
+              {(isEditMode||profile.twitter) && <IconButton icon={<FaTwitter />} label="Twitter" field="twitter" onClick={() => handleIconClick('twitter')} isActive={!!profile.twitter} />}
+              {(isEditMode||profile.linkedin) && <IconButton icon={<FaLinkedin />} label="LinkedIn" field="linkedin" onClick={() => handleIconClick('linkedin')} isActive={!!profile.linkedin} />}
+              {(isEditMode||profile.facebook) && <IconButton icon={<FaFacebook />} label="Facebook" field="facebook" onClick={() => handleIconClick('facebook')} isActive={!!profile.facebook} />}
+              {(isEditMode||profile.instagram) && <IconButton icon={<FaInstagram />} label="Instagram" field="instagram" onClick={() => handleIconClick('instagram')} isActive={!!profile.instagram} />}
             </SimpleGrid>
           </Box>
         </VStack>
@@ -214,14 +257,14 @@ const ProfileData = ({ isEditMode }) => {
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>Update {popupField}</ModalHeader>
+            <ModalHeader>Update {popupField === 'name' ? 'Name' : popupField}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <Input
                 name={popupField}
                 value={profile[popupField]}
                 onChange={handleChange}
-                placeholder={`Enter your ${popupField}`}
+                placeholder={`Enter your ${popupField === 'name' ? 'name' : popupField}`}
               />
             </ModalBody>
             <ModalFooter>
