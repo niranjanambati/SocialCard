@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import ProfileData from './pages/profile/profileData/profileData';
 import Login from './pages/auth/Login';
 import SelectUsername from './pages/selectUsername';
-import { ChakraProvider, Spinner } from '@chakra-ui/react';
+import { ChakraProvider, Spinner, Center } from '@chakra-ui/react';
 import { auth, db } from './firebase/config';
 import { setUser, setHasUsername, selectUser, selectHasUsername } from './redux/userSlice';
 
@@ -35,7 +35,9 @@ const App = () => {
   if (loading) {
     return (
       <ChakraProvider>
-        <Spinner />
+        <Center h="100vh">
+          <Spinner size="xl" />
+        </Center>
       </ChakraProvider>
     );
   }
@@ -46,6 +48,7 @@ const App = () => {
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
           <Route path="/select-username" element={user && !hasUsername ? <SelectUsername /> : <Navigate to="/" />} />
+          
           <Route path="/:username" element={<ProfileData isEditMode={false} />} />
           <Route
             path="/"

@@ -7,7 +7,7 @@ import {
   ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, SimpleGrid, useToast
 } from "@chakra-ui/react";
 import { PhoneIcon, EmailIcon, LinkIcon } from "@chakra-ui/icons";
-import { FaTwitter, FaLinkedin, FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
+import { FaShare,FaTwitter, FaLinkedin, FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import Navbar from '../../../components/navbar/Navbar';
 import { db, storage, auth } from '../../../firebase/config';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -107,6 +107,13 @@ const ProfileData = ({ isEditMode }) => {
     }
   };
 
+
+  const handleShare = () => {
+    const profileUrl = `${window.location.origin}/${profile.username}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Check out my profile: ${profileUrl}`)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handleProfilePicUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -138,7 +145,6 @@ const ProfileData = ({ isEditMode }) => {
       });
     }
   };
-
   const handleIconClick = (field) => {
     if (field === 'resume' && profile.resume) {
       window.open(profile.resume, '_blank');
@@ -249,9 +255,20 @@ const ProfileData = ({ isEditMode }) => {
 
         {isEditMode && user && (
           <Box mt={6}>
-            <Text>You can share this URL:</Text>
-            <Input value={`${window.location.origin}/${profile.username}`} isReadOnly />
-          </Box>
+          <Text>You can share this URL:</Text>
+          <Flex alignItems="center" mt={2} bg="gray.100" p={2} borderRadius="md" border="1px solid" borderColor="gray.300">
+            <Input 
+              value={`${window.location.origin}/${profile.username}`} 
+              isReadOnly 
+              variant="unstyled" 
+              mr={2}
+              bg="white"
+            />
+            <Button leftIcon={<FaShare />} onClick={handleShare} colorScheme="green" size="sm" p={2}>
+              Share
+            </Button>
+          </Flex>
+        </Box>
         )}
 
         <Modal isOpen={isOpen} onClose={onClose}>
