@@ -3,10 +3,11 @@ import { collection, doc, getDoc, setDoc, query, where, getDocs } from 'firebase
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  Box, Flex, Avatar, Text, Button, VStack, Input, useDisclosure, Modal, ModalOverlay,
-  ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, SimpleGrid, useToast
+  Box, Flex, Avatar,IconButton, Text, Button, VStack, Input, useDisclosure, Modal, ModalOverlay,
+  ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, SimpleGrid, useToast,
+  Textarea, Menu, MenuButton, MenuList, MenuItem
 } from "@chakra-ui/react";
-import { PhoneIcon, EmailIcon, LinkIcon } from "@chakra-ui/icons";
+import { PhoneIcon, EmailIcon, LinkIcon, CopyIcon } from "@chakra-ui/icons";
 import { FaShare,FaTwitter, FaLinkedin, FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import Navbar from '../../../components/navbar/Navbar';
 import { db, storage, auth } from '../../../firebase/config';
@@ -28,6 +29,7 @@ const ProfileData = ({ isEditMode }) => {
   const [popupField, setPopupField] = useState('');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [resumeTimeout, setResumeTimeout] = useState(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -85,7 +87,58 @@ const ProfileData = ({ isEditMode }) => {
   }, [user, paramUsername, isEditMode, loading, navigate]);
 
   const handleChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    let error = '';
+
+    switch (name) {
+      case 'resume':
+        if (!/^https:\/\/drive\.google\.com\//.test(value)) {
+          error = 'Resume URL must be a valid Google Drive link';
+        } else {
+          clearTimeout(resumeTimeout);
+          setResumeTimeout(
+            setTimeout(() => {
+              setProfile(prev => ({ ...prev, [name]: value }));
+            }, 2000)
+          );
+          return;
+        }
+        break;
+      case 'contact':
+        if (!/^\d{10}$/.test(value)) {
+          error = 'Phone number must be 10 digits';
+        }
+        break;
+      case 'mail':
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = 'Invalid email format';
+        }
+        break;
+      case 'twitter':
+      case 'linkedin':
+      case 'facebook':
+      case 'instagram':
+        if (!/^https?:\/\//.test(value)) {
+          error = 'URL must start with http:// or https://';
+        }
+        break;
+      case 'whatsapp':
+        if (!/^\+?[1-9]\d{1,14}$/.test(value)) {
+          error = 'Invalid WhatsApp number';
+        }
+        break;
+    }
+
+    setProfile(prev => ({ ...prev, [name]: value }));
+    if (error) {
+      toast({
+        title: "Input Error",
+        description: error,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleSave = async () => {
@@ -95,7 +148,7 @@ const ProfileData = ({ isEditMode }) => {
         name: profile.name || user.displayName || '',
       };
       await setDoc(doc(db, 'profiles', user.uid), updatedProfile);
-      setProfile(updatedProfile); 
+      setProfile(updatedProfile);
       onClose();
       toast({
         title: "Profile updated",
@@ -106,12 +159,41 @@ const ProfileData = ({ isEditMode }) => {
       });
     }
   };
-
-
-  const handleShare = () => {
+  const handleCopyLink = () => {
     const profileUrl = `${window.location.origin}/${profile.username}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Check out my profile: ${profileUrl}`)}`;
-    window.open(whatsappUrl, '_blank');
+    navigator.clipboard.writeText(profileUrl).then(() => {
+      toast({
+        title: "Link copied",
+        description: "Profile link copied to clipboard",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    });
+  };
+
+  const handleShare = (platform) => {
+    const profileUrl = `${window.location.origin}/${profile.username}`;
+    let shareUrl;
+
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(`Check out my profile: ${profileUrl}`)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(profileUrl)}&text=${encodeURIComponent('Check out my profile')}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(profileUrl)}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileUrl)}`;
+        break;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank');
+    }
   };
 
   const handleProfilePicUpload = async (event) => {
@@ -146,9 +228,7 @@ const ProfileData = ({ isEditMode }) => {
     }
   };
   const handleIconClick = (field) => {
-    if (field === 'resume' && profile.resume) {
-      window.open(profile.resume, '_blank');
-    } else if (!isEditMode && profile[field]) {
+    if (!isEditMode && profile[field]) {
       if (field === 'mail') {
         window.location.href = `mailto:${profile[field]}`;
       } else if (field === 'contact') {
@@ -192,10 +272,10 @@ const ProfileData = ({ isEditMode }) => {
     <>
       {isEditMode && <Navbar />}
       <Box maxWidth="800px" margin="auto" padding={4}>
-        <Flex direction="column" align="center" bg="gray.800" p={6} borderRadius="md">
-          <Avatar 
-            size="2xl" 
-            src={profile.avatarUrl || 'https://via.placeholder.com/150'} 
+        <Flex direction="column" align="center" bg="gray.800" p={6} borderRadius="md" boxShadow="lg">
+          <Avatar
+            size={{ base: "xl", md: "2xl" }}
+            src={profile.avatarUrl || 'https://via.placeholder.com/150'}
             mb={4}
             onClick={() => isEditMode && document.getElementById('profilePicInput').click()}
             cursor={isEditMode ? 'pointer' : 'default'}
@@ -209,23 +289,22 @@ const ProfileData = ({ isEditMode }) => {
               display="none"
             />
           )}
-          <Text 
-            fontSize="3xl" 
-            fontWeight="bold" 
+          <Text
+            fontSize={{ base: "2xl", md: "3xl" }}
+            fontWeight="bold"
             color="white"
             onClick={() => isEditMode && handleIconClick('name')}
             cursor={isEditMode ? 'pointer' : 'default'}
           >
             {profile.name || 'Add Name'}
           </Text>
-          <Text color="gray.400" mb={4}>{profile.bio}</Text>
-          <Flex>
+          <Flex direction={{ base: 'column', md: 'row' }} align="center" mt={4}>
             {(isEditMode || profile.resume) && (
-              <Button colorScheme= {profile.resume ? "orange":"gray.400"} onClick={() => handleIconClick('resume')} mr={2}>
+              <Button colorScheme={profile.resume ? "orange" : "gray"} onClick={() => handleIconClick('resume')} mr={{ base: 0, md: 2 }} mb={{ base: 2, md: 0 }}>
                 Resume
               </Button>
             )}
-            <Button colorScheme="teal" onClick={handleDownloadVCard}>
+            <Button colorScheme="teal" onClick={handleDownloadVCard} ml={{ base: 0, md: 2 }}>
               Download Contact
             </Button>
           </Flex>
@@ -234,41 +313,59 @@ const ProfileData = ({ isEditMode }) => {
         <VStack spacing={6} align="stretch" mt={6}>
           <Box>
             <Text fontSize="xl" fontWeight="bold" mb={2}>Contact Details</Text>
-            <SimpleGrid columns={[2, null, 4]} spacing={4}>
-              {(isEditMode||profile.contact) && <IconButton icon={<PhoneIcon />} label="Phone" field="contact" onClick={() => handleIconClick('contact')} isActive={!!profile.contact} />}
-              {(isEditMode||profile.mail) && <IconButton icon={<EmailIcon />} label="Email" field="mail" onClick={() => handleIconClick('mail')} isActive={!!profile.mail} />}
-              {(isEditMode||profile.address) && <IconButton icon={<LinkIcon />} label="Address" field="address" onClick={() => handleIconClick('address')} isActive={!!profile.address} />}
-              {(isEditMode||profile.whatsapp) && <IconButton icon={<FaWhatsapp />} label="WhatsApp" field="whatsapp" onClick={() => handleIconClick('whatsapp')} isActive={!!profile.whatsapp} />}
+            <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+              {(isEditMode || profile.contact) && <IconButton icon={<PhoneIcon />} aria-label="Phone" onClick={() => handleIconClick('contact')} bg={profile.contact ? "linear-gradient(to right, #25D366, #128C7E)" : "gray.400"} color="white" />}
+              {(isEditMode || profile.mail) && <IconButton icon={<EmailIcon />} aria-label="Email" onClick={() => handleIconClick('mail')} bg={profile.mail ? "linear-gradient(to right, #DB4437, #D62D20)" : "gray.400"} color="white" />}
+              {(isEditMode || profile.address) && <IconButton icon={<LinkIcon />} aria-label="Address" onClick={() => handleIconClick('address')} bg={profile.address ? "linear-gradient(to right, #4285F4, #34A853)" : "gray.400"} color="white" />}
+              {(isEditMode || profile.whatsapp) && <IconButton icon={<FaWhatsapp />} aria-label="WhatsApp" onClick={() => handleIconClick('whatsapp')} bg={profile.whatsapp ? "linear-gradient(to right, #25D366, #128C7E)" : "gray.400"} color="white" />}
             </SimpleGrid>
           </Box>
 
           <Box>
             <Text fontSize="xl" fontWeight="bold" mb={2}>Social Media</Text>
-            <SimpleGrid columns={[2, null, 4]} spacing={4}>
-              {(isEditMode||profile.twitter) && <IconButton icon={<FaTwitter />} label="Twitter" field="twitter" onClick={() => handleIconClick('twitter')} isActive={!!profile.twitter} />}
-              {(isEditMode||profile.linkedin) && <IconButton icon={<FaLinkedin />} label="LinkedIn" field="linkedin" onClick={() => handleIconClick('linkedin')} isActive={!!profile.linkedin} />}
-              {(isEditMode||profile.facebook) && <IconButton icon={<FaFacebook />} label="Facebook" field="facebook" onClick={() => handleIconClick('facebook')} isActive={!!profile.facebook} />}
-              {(isEditMode||profile.instagram) && <IconButton icon={<FaInstagram />} label="Instagram" field="instagram" onClick={() => handleIconClick('instagram')} isActive={!!profile.instagram} />}
+            <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+              {(isEditMode || profile.twitter) && <IconButton icon={<FaTwitter />} aria-label="Twitter" onClick={() => handleIconClick('twitter')} bg={profile.twitter ? "linear-gradient(135deg, #1DA1F2 0%, #14171A 100%)" : "gray.400"} color="white" />}
+              {(isEditMode || profile.linkedin) && <IconButton icon={<FaLinkedin />} aria-label="LinkedIn" onClick={() => handleIconClick('linkedin')} bg={profile.linkedin ? "linear-gradient(135deg, #0077B5 0%, #00A0DC 100%)" : "gray.400"} color="white" />}
+              {(isEditMode || profile.facebook) && <IconButton icon={<FaFacebook />} aria-label="Facebook" onClick={() => handleIconClick('facebook')} bg={profile.facebook ? "linear-gradient(135deg, #3B5998 0%, #4C69BA 100%)" : "gray.400"} color="white" />}
+              {(isEditMode || profile.instagram) && <IconButton icon={<FaInstagram />} aria-label="Instagram" onClick={() => handleIconClick('instagram')} bg={profile.instagram ? "linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D)" : "gray.400"} color="white" />}
             </SimpleGrid>
           </Box>
         </VStack>
 
         {isEditMode && user && (
           <Box mt={6}>
-          <Text>You can share this URL:</Text>
-          <Flex alignItems="center" mt={2} bg="gray.100" p={2} borderRadius="md" border="1px solid" borderColor="gray.300">
-            <Input 
-              value={`${window.location.origin}/${profile.username}`} 
-              isReadOnly 
-              variant="unstyled" 
-              mr={2}
-              bg="white"
-            />
-            <Button leftIcon={<FaShare />} onClick={handleShare} colorScheme="green" size="sm" p={2}>
-              Share
-            </Button>
-          </Flex>
-        </Box>
+            <Flex justify="space-between" align="center">
+              <Text>You can share this URL:</Text>
+              <Flex align="center" ml={4}>
+                <IconButton
+                  icon={<CopyIcon />}
+                  onClick={handleCopyLink}
+                  aria-label="Copy link"
+                  mr={2}
+                />
+                <Menu>
+                  <MenuButton as={Button} leftIcon={<FaShare />} colorScheme="green" size="sm">
+                    Share
+                  </MenuButton>
+                  <MenuList>
+                    <MenuItem onClick={() => handleShare('whatsapp')}><FaWhatsapp /> WhatsApp</MenuItem>
+                    <MenuItem onClick={() => handleShare('twitter')}><FaTwitter /> Twitter</MenuItem>
+                    <MenuItem onClick={() => handleShare('facebook')}><FaFacebook /> Facebook</MenuItem>
+                    <MenuItem onClick={() => handleShare('linkedin')}><FaLinkedin /> LinkedIn</MenuItem>
+                  </MenuList>
+                </Menu>
+              </Flex>
+            </Flex>
+            <Flex alignItems="center" mt={2} bg="gray.100" p={2} borderRadius="md" border="1px solid" borderColor="gray.300">
+              <Input
+                value={`${window.location.origin}/${profile.username}`}
+                isReadOnly
+                variant="unstyled"
+                mr={2}
+                bg="white"
+              />
+            </Flex>
+          </Box>
         )}
 
         <Modal isOpen={isOpen} onClose={onClose}>
@@ -296,16 +393,5 @@ const ProfileData = ({ isEditMode }) => {
     </>
   );
 };
-
-const IconButton = ({ icon, label, field, onClick, isActive }) => (
-  <Button
-    leftIcon={icon}
-    onClick={onClick}
-    variant={isActive ? "solid" : "outline"}
-    colorScheme={isActive ? "blue" : "gray"}
-  >
-    {label}
-  </Button>
-);
 
 export default ProfileData;
