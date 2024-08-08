@@ -312,7 +312,7 @@ const ProfileData = ({ isEditMode }) => {
 
         <VStack spacing={6} align="stretch" mt={6}>
           <Box>
-            <Text fontSize="xl" fontWeight="bold" mb={2}>Contact Details</Text>
+            {isEditMode || (profile.contact||profile.mail||profile.address||profile.whatsapp)&&<Text fontSize="xl" fontWeight="bold" mb={2}>Contact Details</Text>}
             <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
               {(isEditMode || profile.contact) && <IconButton icon={<PhoneIcon />} aria-label="Phone" onClick={() => handleIconClick('contact')} bg={profile.contact ? "linear-gradient(to right, #25D366, #128C7E)" : "gray.400"} color="white" />}
               {(isEditMode || profile.mail) && <IconButton icon={<EmailIcon />} aria-label="Email" onClick={() => handleIconClick('mail')} bg={profile.mail ? "linear-gradient(to right, #DB4437, #D62D20)" : "gray.400"} color="white" />}
@@ -322,7 +322,7 @@ const ProfileData = ({ isEditMode }) => {
           </Box>
 
           <Box>
-            <Text fontSize="xl" fontWeight="bold" mb={2}>Social Media</Text>
+          {(isEditMode || (profile.twitter||profile.linkedin||profile.facebook||profile.instagram))&&<Text fontSize="xl" fontWeight="bold" mb={2}>Social Media</Text>}
             <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
               {(isEditMode || profile.twitter) && <IconButton icon={<FaTwitter />} aria-label="Twitter" onClick={() => handleIconClick('twitter')} bg={profile.twitter ? "linear-gradient(135deg, #1DA1F2 0%, #14171A 100%)" : "gray.400"} color="white" />}
               {(isEditMode || profile.linkedin) && <IconButton icon={<FaLinkedin />} aria-label="LinkedIn" onClick={() => handleIconClick('linkedin')} bg={profile.linkedin ? "linear-gradient(135deg, #0077B5 0%, #00A0DC 100%)" : "gray.400"} color="white" />}
