@@ -13,7 +13,7 @@ const Navbar = () => {
     <Flex as="nav" align="center" justify="space-between" wrap="wrap" padding="1.5rem" bg="gray.800" color="white">
       <Box>
         <Text fontSize="lg" fontWeight="bold">
-          Joinzz
+          Joinz
         </Text>
       </Box>
       <Box>
