@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Box, Flex, Avatar,IconButton, Text, Button, VStack, Input, useDisclosure, Modal, ModalOverlay,
   ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, SimpleGrid, useToast,
-  Textarea, Menu, MenuButton, MenuList, MenuItem
+  Textarea, Menu, MenuButton,InputLeftAddon,InputGroup
 } from "@chakra-ui/react";
 import { PhoneIcon, EmailIcon, LinkIcon, CopyIcon } from "@chakra-ui/icons";
 import { FaShare,FaTwitter, FaLinkedin, FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
@@ -14,6 +14,7 @@ import { db, storage, auth } from '../../../firebase/config';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import VCard  from 'vcard-creator';
 import { saveAs } from 'file-saver';
+import { FaLocationDot } from "react-icons/fa6";
 
 const ProfileData = ({ isEditMode }) => {
   const [u] = useAuthState(auth);
@@ -88,57 +89,8 @@ const ProfileData = ({ isEditMode }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    let error = '';
-
-    switch (name) {
-      case 'resume':
-        if (!/^https:\/\/drive\.google\.com\//.test(value)) {
-          error = 'Resume URL must be a valid Google Drive link';
-        } else {
-          clearTimeout(resumeTimeout);
-          setResumeTimeout(
-            setTimeout(() => {
-              setProfile(prev => ({ ...prev, [name]: value }));
-            }, 2000)
-          );
-          return;
-        }
-        break;
-      case 'contact':
-        if (!/^\d{10}$/.test(value)) {
-          error = 'Phone number must be 10 digits';
-        }
-        break;
-      case 'mail':
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          error = 'Invalid email format';
-        }
-        break;
-      case 'twitter':
-      case 'linkedin':
-      case 'facebook':
-      case 'instagram':
-        if (!/^https?:\/\//.test(value)) {
-          error = 'URL must start with http:// or https://';
-        }
-        break;
-      case 'whatsapp':
-        if (!/^\+?[1-9]\d{1,14}$/.test(value)) {
-          error = 'Invalid WhatsApp number';
-        }
-        break;
-    }
-
+  
     setProfile(prev => ({ ...prev, [name]: value }));
-    if (error) {
-      toast({
-        title: "Input Error",
-        description: error,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
   };
 
   const handleSave = async () => {
@@ -172,27 +124,41 @@ const ProfileData = ({ isEditMode }) => {
     });
   };
 
-  const handleShare = (platform) => {
+  const handleShare = async () => {
     const profileUrl = `${window.location.origin}/${profile.username}`;
-    let shareUrl;
-
-    switch (platform) {
-      case 'whatsapp':
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(`Check out my profile: ${profileUrl}`)}`;
-        break;
-      case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(profileUrl)}&text=${encodeURIComponent('Check out my profile')}`;
-        break;
-      case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(profileUrl)}`;
-        break;
-      case 'linkedin':
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileUrl)}`;
-        break;
-    }
-
-    if (shareUrl) {
-      window.open(shareUrl, '_blank');
+    const shareData = {
+      title: 'Check out my profile',
+      text: 'Here is my profile on this awesome platform!',
+      url: profileUrl
+    };
+  
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast({
+          title: "Shared successfully",
+          description: "Your profile link has been shared.",
+          status: "success",
+          duration: 2000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: "Share failed",
+          description: `There was an error sharing your profile: ${error.message}`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else {
+      toast({
+        title: "Share not supported",
+        description: "The Web Share API is not supported on your device.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -264,6 +230,27 @@ const ProfileData = ({ isEditMode }) => {
     saveAs(blob, `${profile.name}.vcf`);
   };
 
+  const getNote = (field) => {
+    switch (field) {
+      case 'instagram':
+        return 'Note: sample input is https://www.instagram.com/username/';
+      case 'linkedin':
+        return 'Note: sample input is https://www.linkedin.com/in/username/';
+      case 'facebook':
+        return 'Note: sample input is https://www.facebook.com/username/';
+      case 'twitter':
+        return 'Note: sample input is https://twitter.com/username/';
+      case 'whatsapp':
+        return 'Note: sample input is +1234567890';
+      case 'mail':
+        return 'Note: sample input is example@mail.com';
+      case 'contact':
+        return 'Note: sample input is 1234567890';
+      default:
+        return '';
+    }
+  };
+
   if (loading) {
     return <Box>Loading...</Box>;
   }
@@ -312,22 +299,22 @@ const ProfileData = ({ isEditMode }) => {
 
         <VStack spacing={6} align="stretch" mt={6}>
           <Box>
-            {isEditMode || (profile.contact||profile.mail||profile.address||profile.whatsapp)&&<Text fontSize="xl" fontWeight="bold" mb={2}>Contact Details</Text>}
+            {(isEditMode || (profile.contact||profile.mail||profile.address||profile.whatsapp))&&<Text fontSize="xl" fontWeight="bold" mb={2}>Contact Details</Text>}
             <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
-              {(isEditMode || profile.contact) && <IconButton icon={<PhoneIcon />} aria-label="Phone" onClick={() => handleIconClick('contact')} bg={profile.contact ? "linear-gradient(to right, #25D366, #128C7E)" : "gray.400"} color="white" />}
-              {(isEditMode || profile.mail) && <IconButton icon={<EmailIcon />} aria-label="Email" onClick={() => handleIconClick('mail')} bg={profile.mail ? "linear-gradient(to right, #DB4437, #D62D20)" : "gray.400"} color="white" />}
-              {(isEditMode || profile.address) && <IconButton icon={<LinkIcon />} aria-label="Address" onClick={() => handleIconClick('address')} bg={profile.address ? "linear-gradient(to right, #4285F4, #34A853)" : "gray.400"} color="white" />}
-              {(isEditMode || profile.whatsapp) && <IconButton icon={<FaWhatsapp />} aria-label="WhatsApp" onClick={() => handleIconClick('whatsapp')} bg={profile.whatsapp ? "linear-gradient(to right, #25D366, #128C7E)" : "gray.400"} color="white" />}
+              {(isEditMode || profile.contact) && <IconButton icon={<PhoneIcon />} aria-label="Phone" onClick={() => handleIconClick('contact')} bg={profile.contact ? "linear-gradient(to right, #25D366, #128C7E)" : "gray.400"} color="white" _hover={{bg: profile.contact ?  "linear-gradient(to right, #25D366, #128C7E)" : "gray.400", }} />}
+              {(isEditMode || profile.mail) && <IconButton icon={<EmailIcon />} aria-label="Email" onClick={() => handleIconClick('mail')} bg={profile.mail ? "linear-gradient(to right, #DB4437, #D62D20)" : "gray.400"} color="white" _hover={{bg: profile.mail ?  "linear-gradient(to right, #DB4437, #D62D20)": "gray.400", }} />}
+              {(isEditMode || profile.address) && <IconButton icon={<FaLocationDot />} aria-label="Address" onClick={() => handleIconClick('address')} bg={profile.address ? "linear-gradient(to right, #4285F4, #34A853)" : "gray.400"} color="white" _hover={{bg: profile.address ?  "linear-gradient(to right, #4285F4, #34A853)": "gray.400", }} />}
+              {(isEditMode || profile.whatsapp) && <IconButton icon={<FaWhatsapp />} aria-label="WhatsApp" onClick={() => handleIconClick('whatsapp')} bg={profile.whatsapp ? "linear-gradient(to right, #25D366, #128C7E)" : "gray.400"} color="white" _hover={{bg: profile.whatsapp ?  "linear-gradient(to right, #25D366, #128C7E)": "gray.400", }} />}
             </SimpleGrid>
           </Box>
 
           <Box>
           {(isEditMode || (profile.twitter||profile.linkedin||profile.facebook||profile.instagram))&&<Text fontSize="xl" fontWeight="bold" mb={2}>Social Media</Text>}
             <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
-              {(isEditMode || profile.twitter) && <IconButton icon={<FaTwitter />} aria-label="Twitter" onClick={() => handleIconClick('twitter')} bg={profile.twitter ? "linear-gradient(135deg, #1DA1F2 0%, #14171A 100%)" : "gray.400"} color="white" />}
-              {(isEditMode || profile.linkedin) && <IconButton icon={<FaLinkedin />} aria-label="LinkedIn" onClick={() => handleIconClick('linkedin')} bg={profile.linkedin ? "linear-gradient(135deg, #0077B5 0%, #00A0DC 100%)" : "gray.400"} color="white" />}
-              {(isEditMode || profile.facebook) && <IconButton icon={<FaFacebook />} aria-label="Facebook" onClick={() => handleIconClick('facebook')} bg={profile.facebook ? "linear-gradient(135deg, #3B5998 0%, #4C69BA 100%)" : "gray.400"} color="white" />}
-              {(isEditMode || profile.instagram) && <IconButton icon={<FaInstagram />} aria-label="Instagram" onClick={() => handleIconClick('instagram')} bg={profile.instagram ? "linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D)" : "gray.400"} color="white" />}
+              {(isEditMode || profile.twitter) && <IconButton icon={<FaTwitter />} aria-label="Twitter" onClick={() => handleIconClick('twitter')} bg={profile.twitter ? "linear-gradient(135deg, #1DA1F2 0%, #14171A 100%)" : "gray.400"} color="white" _hover={{bg: profile.twitter ?  "linear-gradient(135deg, #1DA1F2 0%, #14171A 100%)": "gray.400", }}  />}
+              {(isEditMode || profile.linkedin) && <IconButton icon={<FaLinkedin />} aria-label="LinkedIn" onClick={() => handleIconClick('linkedin')} bg={profile.linkedin ? "linear-gradient(135deg, #0077B5 0%, #00A0DC 100%)" : "gray.400"} color="white"  _hover={{bg: profile.linkedin ?  "linear-gradient(135deg, #0077B5 0%, #00A0DC 100%)": "gray.400", }} />}
+              {(isEditMode || profile.facebook) && <IconButton icon={<FaFacebook />} aria-label="Facebook" onClick={() => handleIconClick('facebook')} bg={profile.facebook ? "linear-gradient(135deg, #3B5998 0%, #4C69BA 100%)" : "gray.400"} color="white" _hover={{bg: profile.facebook ?  "linear-gradient(135deg, #3B5998 0%, #4C69BA 100%)" : "gray.400", }}  />}
+              {(isEditMode || profile.instagram) && <IconButton icon={<FaInstagram />} aria-label="Instagram" onClick={() => handleIconClick('instagram')} bg={profile.instagram ? "linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D)" : "gray.400"} color="white" _hover={{bg: profile.instagram ?  "linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D)" : "gray.400", }}  />}
             </SimpleGrid>
           </Box>
         </VStack>
@@ -344,15 +331,9 @@ const ProfileData = ({ isEditMode }) => {
                   mr={2}
                 />
                 <Menu>
-                  <MenuButton as={Button} leftIcon={<FaShare />} colorScheme="green" size="sm">
+                  <MenuButton as={Button} leftIcon={<FaShare />} onClick={handleShare} colorScheme="green" size="sm">
                     Share
                   </MenuButton>
-                  <MenuList>
-                    <MenuItem onClick={() => handleShare('whatsapp')}><FaWhatsapp /> WhatsApp</MenuItem>
-                    <MenuItem onClick={() => handleShare('twitter')}><FaTwitter /> Twitter</MenuItem>
-                    <MenuItem onClick={() => handleShare('facebook')}><FaFacebook /> Facebook</MenuItem>
-                    <MenuItem onClick={() => handleShare('linkedin')}><FaLinkedin /> LinkedIn</MenuItem>
-                  </MenuList>
                 </Menu>
               </Flex>
             </Flex>
@@ -374,13 +355,79 @@ const ProfileData = ({ isEditMode }) => {
             <ModalHeader>Update {popupField === 'name' ? 'Name' : popupField}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <Input
-                name={popupField}
-                value={profile[popupField]}
-                onChange={handleChange}
-                placeholder={`Enter your ${popupField === 'name' ? 'name' : popupField}`}
-              />
-            </ModalBody>
+  {popupField === 'twitter' && (
+    <InputGroup>
+      <InputLeftAddon children="https://twitter.com/" />
+      <Input
+        name={popupField}
+        value={profile[popupField].replace('https://twitter.com/', '')}
+        onChange={handleChange}
+        placeholder="Enter your Twitter username"
+      />
+    </InputGroup>
+  )}
+  {popupField === 'linkedin' && (
+    <InputGroup>
+      <InputLeftAddon children="https://www.linkedin.com/in/" />
+      <Input
+        name={popupField}
+        value={profile[popupField].replace('https://www.linkedin.com/in/', '')}
+        onChange={handleChange}
+        placeholder="Enter your LinkedIn username"
+      />
+    </InputGroup>
+  )}
+  {popupField === 'facebook' && (
+    <InputGroup>
+      <InputLeftAddon children="https://www.facebook.com/" />
+      <Input
+        name={popupField}
+        value={profile[popupField].replace('https://www.facebook.com/', '')}
+        onChange={handleChange}
+        placeholder="Enter your Facebook username"
+      />
+    </InputGroup>
+  )}
+  {popupField === 'instagram' && (
+    <InputGroup>
+      <InputLeftAddon children="https://www.instagram.com/" />
+      <Input
+        name={popupField}
+        value={profile[popupField].replace('https://www.instagram.com/', '')}
+        onChange={handleChange}
+        placeholder="Enter your Instagram username"
+      />
+    </InputGroup>
+  )}
+  {popupField === 'whatsapp' && (
+    <Input
+      name={popupField}
+      value={profile[popupField]}
+      onChange={handleChange}
+      placeholder="Enter your WhatsApp number"
+    />
+  )}
+  {popupField === 'mail' && (
+    <Input
+      name={popupField}
+      value={profile[popupField]}
+      onChange={handleChange}
+      placeholder="Enter your email"
+    />
+  )}
+  {popupField === 'contact' && (
+    <Input
+      name={popupField}
+      value={profile[popupField]}
+      onChange={handleChange}
+      placeholder="Enter your contact number"
+    />
+  )}
+  <Text mt={2} color="gray.500" fontSize="sm">
+    {getNote(popupField)}
+  </Text>
+</ModalBody>
+
             <ModalFooter>
               <Button colorScheme="blue" mr={3} onClick={handleSave}>
                 Save
