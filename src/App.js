@@ -1,4 +1,4 @@
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -17,18 +17,18 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        dispatch(setUser(user));
-        const userDoc = await getDoc(doc(db, 'profiles', user.uid));
-        dispatch(setHasUsername(userDoc.exists() && userDoc.data().username));
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      if (authUser) {
+        dispatch(setUser(authUser));
+        const userDoc = await getDoc(doc(db, 'profiles', authUser.uid));
+        const userHasUsername = userDoc.exists() && userDoc.data().username;
+        dispatch(setHasUsername(userHasUsername));
       } else {
         dispatch(setUser(null));
         dispatch(setHasUsername(false));
       }
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, [dispatch]);
 
@@ -47,17 +47,37 @@ const App = () => {
       <Router>
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-          <Route path="/select-username" element={user && !hasUsername ? <SelectUsername /> : <Navigate to="/" />} />
-          
+          <Route 
+            path="/select-username" 
+            element={
+              loading ? (
+                <Center h="100vh">
+                  <Spinner size="xl" />
+                </Center>
+              ) : user && !hasUsername ? (
+                <SelectUsername />
+              ) : (
+                <Navigate to="/" />
+              )
+            } 
+          />
           <Route path="/:username" element={<ProfileData isEditMode={false} />} />
           <Route
             path="/"
             element={
-              user 
-                ? hasUsername 
-                  ? <ProfileData isEditMode={true} /> 
-                  : <Navigate to="/select-username" />
-                : <Navigate to="/login" />
+              loading ? (
+                <Center h="100vh">
+                  <Spinner size="xl" />
+                </Center>
+              ) : user ? (
+                hasUsername ? (
+                  <ProfileData isEditMode={true} />
+                ) : (
+                  <Navigate to="/select-username" />
+                )
+              ) : (
+                <Navigate to="/login" />
+              )
             }
           />
         </Routes>
