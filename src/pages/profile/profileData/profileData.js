@@ -423,6 +423,22 @@ const ProfileData = ({ isEditMode }) => {
       placeholder="Enter your contact number"
     />
   )}
+  {popupField === 'address' && (
+    <Input
+      name={popupField}
+      value={profile[popupField]}
+      onChange={handleChange}
+      placeholder="Enter your Address"
+    />
+  )}
+  {popupField === 'resume' && (
+    <Input
+      name={popupField}
+      value={profile[popupField]}
+      onChange={handleChange}
+      placeholder="Enter your Resume link"
+    />
+  )}
   <Text mt={2} color="gray.500" fontSize="sm">
     {getNote(popupField)}
   </Text>
